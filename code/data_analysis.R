@@ -3,14 +3,12 @@
 ## The preparation of the dataset from raw data is given in data_preparation.R
 ###################################################################################
 
-rm(list=ls())
 ## load required functions and packages
 source('./auxfuns/pkg.R')
-source('./auxfuns/pcomb.R')
-source('./auxfuns/SASOM.R')
 source('./auxfuns/competing_methods.R')
-source('./auxfuns/robust_methods.R')
-
+## install SASOM from local
+install.packages("./auxfuns/SASOM_0.1.0.tar.gz", repos = NULL, type ="source")
+library(SASOM)
 
 ## load data
 dat = readRDS("../data/SKCM_data_for_H_pathway.rds")
@@ -45,10 +43,10 @@ for(i in 1:n)
 ########### SASOM ############
 res_sasom = NULL
 for(i in 1:n)
-    res_sasom = rbind(res_sasom, SASOM(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G,dat[[i]]$W,3))
+    res_sasom = rbind(res_sasom, SASOM(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G,dat[[i]]$W,3,"all"))
 
 ########## summarize results ###########
-res = cbind(res_burden,res_uSKAT,res_dkat,res_mRand,res_uMiST,res_sasom)
+res = cbind(res_burden,res_uSKAT,res_dkat,res_mRand,res_uMiST,res_sasom[,3:5])
 colnames(res) = c('Burden','uSKAT','DKAT-I','DKAT-T','mRand','uMiST','SASOM-F','SASOM-T','SASOM-D')
 rownames(res) = names(dat)
 
