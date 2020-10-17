@@ -32,8 +32,7 @@ for(i in 1:n)
 ########### mRand ############
 res_mRand = NULL
 for(i in 1:n)
-    res_mRand = rbind(res_mRand, mRand(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G,3))
-
+    res_mRand = rbind(res_mRand, mRand(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G))
 
 ########### uMiST ############
 res_uMiST = NULL
@@ -43,11 +42,12 @@ for(i in 1:n)
 ########### SASOM ############
 res_sasom = NULL
 for(i in 1:n)
-    res_sasom = rbind(res_sasom, SASOM(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G,dat[[i]]$W,3,"all"))
+    res_sasom = rbind(res_sasom, SASOM(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G,dat[[i]]$W,"all"))
 
 ########## summarize results ###########
 res = cbind(res_burden,res_uSKAT,res_dkat,res_mRand,res_uMiST,res_sasom[,3:5])
 colnames(res) = c('Burden','uSKAT','DKAT-I','DKAT-T','mRand','uMiST','SASOM-F','SASOM-T','SASOM-D')
 rownames(res) = names(dat)
+
 
 

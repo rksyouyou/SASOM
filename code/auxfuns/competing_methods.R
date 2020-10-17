@@ -257,7 +257,7 @@ varfun <- function(mu){
     return(D)
 }
 
-mRand <- function(y,X,G,rlevel=1){
+mRand <- function(y,X,G){
 
     ## check the format of Y, if its a vector change it to matrix
     if(is.vector(y)|is.factor(y)) {
@@ -277,11 +277,6 @@ mRand <- function(y,X,G,rlevel=1){
         stop("Error: y must be a vector or matrix!")
     }
 
-    ## adjust the order of columns based on reference level
-    ## put the column correspond to reference level as the first column
-    rc <- which(colnames(ymat) == rlevel)
-    ymat <- ymat[,c(rc,setdiff(1:J,rc))]
-
     ## check if there is intercept in X, if not add intercept column
     if(sum(X[,1] == 1)<n){
         print('An intercept column is added to covariant matrix.')
@@ -296,6 +291,7 @@ mRand <- function(y,X,G,rlevel=1){
     Y.s <- matrix(as.vector(ymat[,-1]),ncol=1)
     X.s <- kronecker(diag(J-1),X)
     G.s <- kronecker(diag(J-1),G)
+    p = ncol(G)
 
     ## fit a model under H0
     fit1 <- multinom(ymat~0+X,trace=FALSE)
@@ -303,12 +299,12 @@ mRand <- function(y,X,G,rlevel=1){
     mu1.s <- as.vector(mu1)
     ## construct variance matrix under H0
     D1 <- varfun(mu1)
-    ## score test for theta 
-    A = t(G.s)%*%(Y.s-mu1.s)
-    L = t(A)%*%A
+    ## score test for theta
+    A = rbind(kronecker(diag(J-1),diag(p)),kronecker(matrix(1,ncol=J-1,nrow=1),diag(p)))
+    B = A%*%t(G.s)%*%(Y.s-mu1.s)
+    L = t(B)%*%B
     DX = D1%*%X.s
-    
-    V.tau = t(G.s)%*%(D1 - DX%*%solve(t(X.s)%*%DX)%*%t(DX))%*%(G.s)
+    V.tau = A%*%t(G.s)%*%(D1 - DX%*%solve(t(X.s)%*%DX)%*%t(DX))%*%(G.s)%*%t(A)
     lam <- eigen(V.tau,symmetric=TRUE)$values
     pval.tau <- davies(L, lam)$Qq
     if(pval.tau<0) pval.tau  = liu(L,lam)
