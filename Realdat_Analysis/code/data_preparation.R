@@ -29,7 +29,6 @@ tmp = cbind(sdat[,c(1,2,4,5)],val=1)
 smat = dcast(tmp,Sample_ID~gene+start+end,value.var = "val",fill=0) 
 rownames(smat) = smat[,1]
 smat = as.matrix(smat[,-1])
-smat[smat>1] = 1
 
 ########################################################################
 ################## Identify cancer subtypes (response) #################

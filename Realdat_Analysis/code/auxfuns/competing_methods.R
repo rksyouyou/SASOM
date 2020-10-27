@@ -133,7 +133,8 @@ burden <- function(y,X,G){
 ####################################################################################
 ################################ uSKAT method ######################################
 ####################################################################################
-uSKAT <- function(y,X,G,rlevel){
+uSKAT <- function(y,X,G){
+    
     ## check the format of Y, if its a vector, convert it to matrix
     if(is.vector(y)|is.factor(y)) {
         y <- as.factor(y)
@@ -152,49 +153,35 @@ uSKAT <- function(y,X,G,rlevel){
         stop("Error: y must be a vector or matrix!")
     }
 
-    ## adjust the order of columns based on reference level
-    ## put the column correspond to reference level as the first column
-    rc <- which(colnames(ymat) == rlevel)
-    ymat <- ymat[,c(rc,setdiff(1:J,rc))]
-    id1 = which(ymat[,1]==1)
-    id2 = which(ymat[,2]==1)
-    id3 = which(ymat[,3]==1)
-    X1 = X[id1,,drop=FALSE]
-    X2 = X[id2,,drop=FALSE]
-    X3 = X[id3,,drop=FALSE]
-    ymat1 = ymat[id1,]
-    ymat2 = ymat[id2,]
-    ymat3 = ymat[id3,]
-    G1 = G[id1,,drop=FALSE]
-    G2 = G[id2,,drop=FALSE]
-    G3 = G[id3,,drop=FALSE]
-    y12 = rbind(ymat1,ymat2)
-    y12 = y12[,apply(y12,2,sum)>0]
-    y13 = rbind(ymat1,ymat3)
-    y13 = y13[,apply(y13,2,sum)>0]
+    X12 = X[ymat[,3]==0,]
+    X13 = X[ymat[,2]==0,]
+    X23 = X[ymat[,1]==0,]
+    G12 = G[ymat[,3]==0,]
+    G13 = G[ymat[,2]==0,]
+    G23 = G[ymat[,1]==0,]
+    y12 = ymat[ymat[,3]==0,1]
+    y13 = ymat[ymat[,2]==0,1]
+    y23 = ymat[ymat[,1]==0,2]
+
+    out = rep(NA,3)
     suppressWarnings({
-        obj12 <- SKAT_Null_Model(y12[,1]~0+rbind(X1,X2),out_type='D',Adjustment = FALSE)
-        obj13 <- SKAT_Null_Model(y13[,1]~0+rbind(X1,X3),out_type='D',Adjustment = FALSE)
-        p12 <- SKAT(rbind(G1,G2), obj12, kernel="linear")$p.value 
-        p13 <- SKAT(rbind(G1,G3), obj13, kernel="linear")$p.value
+        obj12 <- SKAT_Null_Model(y12~0+X12,out_type='D',Adjustment = FALSE)
+        obj13 <- SKAT_Null_Model(y13~0+X13,out_type='D',Adjustment = FALSE)
+        obj23 <- SKAT_Null_Model(y23~0+X23,out_type='D',Adjustment = FALSE)
+        p12 <- SKAT(G12, obj12, kernel="linear")$p.value 
+        p13 <- SKAT(G13, obj13, kernel="linear")$p.value
+        p23 <- SKAT(G23, obj23, kernel="linear")$p.value
+        out = c(p12,p13,p23)
     })
-    return(min(min(p12,p13)*2,1))
+    return(min(min(out,na.rm=TRUE)*3,1))
 }
+
 
 ####################################################################################
 ################################ uMiST method ######################################
 ####################################################################################
-ref_mist = function(y1,y2,x1,x2,g1,g2,w){
-  y = rbind(y1,y2)
-  y = y[,apply(y,2,sum)>0]  
-  x = rbind(x1,x2)
-  g = rbind(g1,g2)
-  suppressWarnings({out = try(unlist(logit.test(y[,1],x,g,w,"liu"))[5],silent = TRUE)})
-  if(!is.numeric(out)) out = NA
-  return(out)
-}
 
-uMiST <- function(y,X,G,W,rlevel){ # mist-univariate
+uMiST <- function(y,X,G,W){ # mist-univariate
     ## check the format of Y, if its a vector, convert it to matrix
     if(is.vector(y)|is.factor(y)) {
         y <- as.factor(y)
@@ -213,25 +200,27 @@ uMiST <- function(y,X,G,W,rlevel){ # mist-univariate
         stop("Error: y must be a vector or matrix!")
     }
     W = t(W)
-    ## adjust the order of columns based on reference level
-    ## put the column correspond to reference level as the first column
-    rc <- which(colnames(ymat) == rlevel)
-    ymat <- ymat[,c(rc,setdiff(1:J,rc))]
-    id1 = which(ymat[,1]==1)
-    id2 = which(ymat[,2]==1)
-    id3 = which(ymat[,3]==1)
-    X1 = X[id1,,drop=FALSE]
-    X2 = X[id2,,drop=FALSE]
-    X3 = X[id3,,drop=FALSE]
-    ymat1 = ymat[id1,]
-    ymat2 = ymat[id2,]
-    ymat3 = ymat[id3,]
-    G1 = G[id1,,drop=FALSE]
-    G2 = G[id2,,drop=FALSE]
-    G3 = G[id3,,drop=FALSE]
-    tmp = c(ref_mist(ymat1,ymat2,X1,X2,G1,G2,W),ref_mist(ymat1,ymat3,X1,X3,G1,G3,W))
-    return(min(min(tmp)*2,1))
+
+    X12 = X[ymat[,3]==0,]
+    X13 = X[ymat[,2]==0,]
+    X23 = X[ymat[,1]==0,]
+    G12 = G[ymat[,3]==0,]
+    G13 = G[ymat[,2]==0,]
+    G23 = G[ymat[,1]==0,]
+    y12 = ymat[ymat[,3]==0,1]
+    y13 = ymat[ymat[,2]==0,1]
+    y23 = ymat[ymat[,1]==0,2]
+
+    out = rep(NA,3)
+    suppressWarnings({
+        p12 = as.numeric(try(unlist(logit.test(y12,X12,G12,W,"liu"))[5],silent = TRUE))
+        p13 = as.numeric(try(unlist(logit.test(y13,X13,G13,W,"liu"))[5],silent = TRUE))
+        p23 = as.numeric(try(unlist(logit.test(y23,X23,G23,W,"liu"))[5],silent = TRUE))
+        out = c(p12,p13,p23)
+    })
+    return(min(min(out,na.rm=TRUE)*3,1))
 }
+
 
 ####################################################################################
 ################################ mRand  method #####################################

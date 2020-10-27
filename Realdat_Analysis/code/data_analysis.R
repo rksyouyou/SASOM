@@ -22,7 +22,7 @@ for(i in 1:n)
 ########### uSKAT ############
 res_uSKAT = NULL
 for(i in 1:n)
-    res_uSKAT = rbind(res_uSKAT, uSKAT(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G,3))
+    res_uSKAT = rbind(res_uSKAT, uSKAT(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G))
 
 ########### DKAT ############
 res_dkat = NULL
@@ -37,7 +37,7 @@ for(i in 1:n)
 ########### uMiST ############
 res_uMiST = NULL
 for(i in 1:n)
-    res_uMiST = rbind(res_uMiST,uMiST(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G,dat[[i]]$W,3))
+    res_uMiST = rbind(res_uMiST,uMiST(dat[[i]]$y,dat[[i]]$X,dat[[i]]$G,dat[[i]]$W))
 
 ########### SASOM ############
 res_sasom = NULL
@@ -48,6 +48,7 @@ for(i in 1:n)
 res = cbind(res_burden,res_uSKAT,res_dkat,res_mRand,res_uMiST,res_sasom[,3:5])
 colnames(res) = c('Burden','uSKAT','DKAT-I','DKAT-T','mRand','uMiST','SASOM-F','SASOM-T','SASOM-D')
 rownames(res) = names(dat)
+
 
 
 
