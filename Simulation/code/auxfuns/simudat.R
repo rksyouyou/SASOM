@@ -1,5 +1,5 @@
 
-simudat <- function(seed,W,alpha,theta,xi,rlevel){
+simudat <- function(seed,n,W,alpha,theta,xi,rlevel){
     set.seed(seed)
 
     p = ncol(W)
