@@ -1,6 +1,0 @@
-require(SKAT)
-require(MiST)
-require(glasso)
-require(PearsonDS)
-require(nnet)
-require(CompQuadForm)
